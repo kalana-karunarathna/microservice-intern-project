@@ -8,46 +8,47 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout') {
       steps {
-        git 'https://github.com/kalana-karunarathna/microservice-intern-project.git'
+        git branch: 'main', url: 'https://github.com/kalana-karunarathna/microservice-intern-project.git'
       }
     }
 
     stage('Build Auth-Service Image') {
       steps {
-        bat 'docker build -t ${DOCKER_USER}/auth-service:latest ./auth-service'
+        bat "docker build -t %DOCKER_USER%/auth-service:latest ./auth-service"
       }
     }
 
     stage('Build Task-Service Image') {
       steps {
-        bat 'docker build -t ${DOCKER_USER}/task-service:latest ./task-service'
+        bat "docker build -t %DOCKER_USER%/task-service:latest ./task-service"
       }
     }
 
     stage('Login to Docker Hub') {
       steps {
-        bat 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+        bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
       }
     }
 
     stage('Push Auth-Service') {
       steps {
-        bat 'docker push ${DOCKER_USER}/auth-service:latest'
+        bat "docker push %DOCKER_USER%/auth-service:latest"
       }
     }
 
     stage('Push Task-Service') {
       steps {
-        bat 'docker push ${DOCKER_USER}/task-service:latest'
+        bat "docker push %DOCKER_USER%/task-service:latest"
       }
     }
   }
 
   post {
     always {
-      bat 'docker logout || true'
+      bat 'docker logout || exit 0'
     }
   }
 }
