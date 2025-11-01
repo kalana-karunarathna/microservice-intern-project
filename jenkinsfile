@@ -1,0 +1,53 @@
+pipeline {
+  agent any
+
+  environment {
+    DOCKERHUB_CREDS = credentials('dockerhub')
+    DOCKER_USER = "${DOCKERHUB_CREDS_USR}"
+    DOCKER_PASS = "${DOCKERHUB_CREDS_PSW}"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/<your-username>/<your-repo>.git'
+      }
+    }
+
+    stage('Build Auth-Service Image') {
+      steps {
+        sh 'docker build -t ${DOCKER_USER}/auth-service:latest ./auth-service'
+      }
+    }
+
+    stage('Build Task-Service Image') {
+      steps {
+        sh 'docker build -t ${DOCKER_USER}/task-service:latest ./task-service'
+      }
+    }
+
+    stage('Login to Docker Hub') {
+      steps {
+        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+      }
+    }
+
+    stage('Push Auth-Service') {
+      steps {
+        sh 'docker push ${DOCKER_USER}/auth-service:latest'
+      }
+    }
+
+    stage('Push Task-Service') {
+      steps {
+        sh 'docker push ${DOCKER_USER}/task-service:latest'
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'docker logout || true'
+    }
+  }
+}
